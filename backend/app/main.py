@@ -20,16 +20,9 @@ app = FastAPI(
 # Register routes
 app.include_router(user.router, prefix="/api/v1")
 
+# Conditionally include debug endpoints
+if config.debug:
+    from app.core import debug, health
 
-@app.get("/health", tags=["Health"])
-async def health_check():
-    return {"status": "ok"}
-
-
-@app.get("/config", tags=["Config"])
-async def get_config():
-    return {
-        "app_name": config.app_name,
-        "debug": config.debug,
-        "db_url": config.db_url,
-    }
+    app.include_router(health.router)
+    app.include_router(debug.router)

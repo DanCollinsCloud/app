@@ -14,7 +14,7 @@ services:
       - "8000:80"
     environment:
       - PYTHONUNBUFFERED=1
-      - ENVIRONMENT=development
+      - DEBUG=False
       # Add database connection string
       - DB_URL=postgresql://postgres:postgres@db:5432/appdb
       # Add any other environment variables
