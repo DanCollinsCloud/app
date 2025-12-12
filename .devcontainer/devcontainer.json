@@ -1,0 +1,60 @@
+{
+  "name": "Backend Development",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "backend",
+  "workspaceFolder": "/code",
+
+  // Configure tool-specific properties
+  "customizations": {
+    "vscode": {
+      // Set *default* container specific settings.json values on container create
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": false,
+        "python.linting.flake8Enabled": true,
+        "python.formatting.provider": "black",
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false,
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit"
+        }
+      },
+
+      // Add the IDs of extensions you want installed when the container is created
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "ms-python.flake8",
+        "ms-python.debugpy",
+        "GitHub.copilot",
+        "eamodio.gitlens"
+      ]
+    }
+  },
+
+  // Use 'forwardPorts' to make a list of ports inside the container available locally
+  "forwardPorts": [80],
+
+  // Use 'postCreateCommand' to run commands after the container is created
+  "postCreateCommand": "pip install --no-cache-dir -e '.[dev]' 2>/dev/null || echo 'No editable install configured'",
+
+  // Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root
+  "remoteUser": "vscode",
+
+  // Keep the container running even if VS Code is closed
+  "shutdownAction": "stopCompose",
+
+  // Mount the workspace directory
+  "mounts": [
+    "source=${localWorkspaceFolder}/backend,target=/code,type=bind,consistency=cached"
+  ],
+
+  // Features to add to the dev container
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  }
+}
