@@ -1,0 +1,56 @@
+# Use the same base image as production for consistency
+FROM python:3.13-slim-bookworm
+
+# Install build dependencies and development tools
+RUN apt-get update && apt-get install --no-install-recommends -y \
+        build-essential \
+        git \
+        curl \
+        vim \
+        sudo \
+        bash-completion && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user for development
+ARG USERNAME=vscode
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+
+# Set working directory to match production
+WORKDIR /code
+
+# Copy requirements
+COPY ./requirements.txt /code/requirements.txt
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+
+# Install development dependencies (hot-reload, debugging, testing)
+RUN pip install --no-cache-dir \
+    pytest \
+    pytest-cov \
+    black \
+    flake8 \
+    mypy \
+    ipython \
+    debugpy
+
+# Copy application code
+COPY ./app /code/app
+
+# Give ownership to non-root user
+RUN chown -R $USERNAME:$USERNAME /code
+
+# Switch to non-root user
+USER $USERNAME
+
+# Expose the same port as production
+EXPOSE 80
+
+# Development command with hot-reload
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80", "--reload"]

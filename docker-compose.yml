@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: backend
+      dockerfile: Dockerfile-dev
+    volumes:
+      # Mount the backend code for live development
+      - ./backend:/code:cached
+      # Persist pip cache
+      - pip-cache:/root/.cache/pip
+    ports:
+      - "8000:80"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ENVIRONMENT=development
+      # Add database connection string
+      - DB_URL=postgresql://postgres:postgres@db:5432/appdb
+      # Add any other environment variables
+    command: uvicorn app.main:app --host 0.0.0.0 --port 80 --reload
+    depends_on:
+      - db
+    networks:
+      - dev-network
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: appdb
+    ports:
+      - "5432:5432"
+    networks:
+      - dev-network
+
+  # Optional: Add a database admin tool
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    networks:
+      - dev-network
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+
+volumes:
+  postgres-data:
+  pip-cache:
+  pgadmin-data:
+  backend:
+
+networks:
+  dev-network:
+    driver: bridge
